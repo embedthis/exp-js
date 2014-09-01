@@ -1,0 +1,18 @@
+{
+    "name": "exp-js",
+    "description": "Js Plugin for Expansive",
+    "version": "1.1.9",
+    "keywords": [
+        "expansive-plugin",
+        "js"
+    ],
+    "licenses": "GPL",
+    "ignore": [
+        "**/test/**",
+        "**/tests/**",
+        "**/benchmark/**"
+    ],
+    "engines": {
+        "node": ">= 0.4.0"
+    }
+}
