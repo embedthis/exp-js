@@ -1,5 +1,5 @@
-{
-    control: {
+Expansive.load({
+    expansive: {
         transforms: {
             name:       'minify-js',
             from:       'js',
@@ -31,4 +31,4 @@
             `
         }
     }
-}
+})
