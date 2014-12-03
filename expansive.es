@@ -2,8 +2,8 @@ Expansive.load({
     expansive: {
         transforms: {
             name:       'minify-js',
-            from:       'js',
-            to:         'js',
+            input:      'js',
+            output:     'js',
             compress:   true,
             mangle:     true,
             dotmin:     false,

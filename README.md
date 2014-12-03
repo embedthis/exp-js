@@ -7,7 +7,7 @@ Provides the 'minify-js' service.
 
 ### To install:
 
-exp install exp-js
+exp install js
 
 ### Get Pak from
 
