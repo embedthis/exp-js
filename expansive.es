@@ -1,6 +1,7 @@
 Expansive.load({
     transforms: {
         name:       'minify-js',
+        files:      null,
         input:      'js',
         output:     'js',
         compress:   true,
@@ -9,7 +10,20 @@ Expansive.load({
         exclude:    null,
 
         script: `
+            let service = expansive.services['minify-js']
+            service.files = expansive.directories.source.files(service.files, {relative: true}).unique()
             function transform(contents, meta, service) {
+                let match = service.files == null
+                for each (file in service.files) {
+                    if (meta.file.glob(file)) {
+                        match = true
+                        break
+                    }
+                }
+                if (!match) {
+                    vtrace('Omit', 'Skip minifying', meta.file)
+                    return contents
+                }
                 let minify = Cmd.locate('uglifyjs')
                 if (!minify) {
                     trace('Warn', 'Cannot find uglifyjs')
@@ -27,15 +41,15 @@ Expansive.load({
                         service.exclude = [service.exclude]
                     }
                     for each (pat in service.exclude) {
-                        if (meta.dest.glob(pat)) {
-                            vtrace('Omit', 'Skip minifying', meta.dest)
+                        if (meta.file.glob(pat)) {
+                            vtrace('Omit', 'Skip minifying', meta.file)
                             return contents
                         }
                     }
                 }
                 contents = run(cmd, contents)
-                if (service.dotmin && !meta.public.contains('min.js')) {
-                    meta.public = meta.public.trimExt().joinExt('min.js', true)
+                if (service.dotmin && !meta.document.contains('min.js')) {
+                    meta.document = meta.document.trimExt().joinExt('min.js', true)
                 }
                 return contents
             }
