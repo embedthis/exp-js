@@ -17,12 +17,12 @@ enabled.
 
 ### To configure in expansive.json:
 
-* minify-js.enable - Enable minifying script files.
-* minify-js.files - Array of files to minify. Files are relative to 'source'.
-* minify-js.compress - Enable compression of script files.
-* minify-js.mangle - Enable mangling of Javascript variable and function names.
-* minify-js.dotmin - Set '.min.js' as the output file extension after minification. Otherwise will be '.js'.
-* minify-js.exclude - Array of files to exclude from minification. Files are relative to 'source'.
+* minify-js.enable &mdash; Enable minifying script files.
+* minify-js.files &mdash; Array of files to minify. Files are relative to 'source'.
+* minify-js.compress &mdash; Enable compression of script files.
+* minify-js.mangle &mdash; Enable mangling of Javascript variable and function names.
+* minify-js.dotmin &mdash; Set '.min.js' as the output file extension after minification. Otherwise will be '.js'.
+* minify-js.exclude &mdash; Array of files to exclude from minification. Files are relative to 'source'.
 
 ```
 {
