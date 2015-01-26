@@ -7,8 +7,38 @@ Provides the 'minify-js' service.
 
 ### To install:
 
-exp install js
+    pak install exp-js
+
+### Description
+
+Script files can be optimized by post-processing to remove white-space, managle names and otherwise compress.
+By default, the script files use a '.js' extension, but will use a '.min.js' extension if the 'dotmin' option is
+enabled.
+
+### To configure in expansive.json:
+
+* minify-js.enable - Enable minifying script files.
+* minify-js.files - Array of files to minify. Files are relative to 'source'.
+* minify-js.compress - Enable compression of script files.
+* minify-js.mangle - Enable mangling of Javascript variable and function names.
+* minify-js.dotmin - Set '.min.js' as the output file extension after minification. Otherwise will be '.js'.
+* minify-js.exclude - Array of files to exclude from minification. Files are relative to 'source'.
+
+```
+{
+    services: {
+        'minify-js': {
+            enable: true,
+            files:      null,
+            compress:   true,
+            mangle:     true,
+            dotmin:     false,
+            exclude:    []
+        }
+    }
+}
+```
 
 ### Get Pak from
 
-[https://github.com/embedthis/pak](https://github.com/embedthis/pak)
+[https://embedthis.com/pak/](https://embedthis.com/pak/download.html)
