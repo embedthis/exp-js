@@ -10,7 +10,7 @@
     "licenses": "GPL",
     "scripts": {
         "postcache": {
-            "script": "Cmd.locate('uglifyjs') || run('npm install -g uglifyjs')"
+            "script": "Cmd.locate('uglifyjs') || run('npm install -g uglify-js')"
         }
     },
     "install": false
