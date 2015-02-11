@@ -11,7 +11,7 @@ Expansive.load({
 
         script: `
             let service = expansive.services['minify-js']
-            service.files = expansive.directories.source.files(service.files, {relative: true}).unique()
+            service.files = expansive.directories.contents.files(service.files, {relative: true}).unique()
             function transform(contents, meta, service) {
                 let match = service.files == null
                 for each (file in service.files) {
