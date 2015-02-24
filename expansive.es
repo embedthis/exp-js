@@ -2,18 +2,18 @@ Expansive.load({
     transforms: {
         name:       'minify-js',
         files:      null,
-        
+
         mappings: {
             'js',
             'min.js',
             'min.map'
         },
 
-        /* 
-            Smart defaults for debug. Will use minified if map present
+        /*
+            Smart defaults for debug. Will use minified if map present.
         */
         usemap:     true,
-        usemin:     false,
+        usemin:     null,
 
         minify:     false,
         dotmin:     true,
@@ -22,95 +22,155 @@ Expansive.load({
         compress:   true,
         mangle:     true,
 
-        exclude:    null,
-
         script: `
-            let service = expansive.services['minify-js']
-            if (!service.files) {
-                let files = expansive.directories.top.files(expansive.control.documents, 
-                    {exclude: 'directories', relative: true})
-                service.files = files.filter(function(path) path.glob('**.js'))
-                service.files += files.filter(function(path) path.glob('**.min.map'))
-            }
-            if (service.exclude) {
-                if (!(service.exclude is Array)) {
-                    service.exclude = [service.exclude]
-                }
-            }
-            service.hash = {}
-            for each (file in service.files) {
-                for each (pat in service.exclude) {
-                    if (file.glob(pat)) {
-                        file = null
-                        break
+            function init() {
+                let directories = expansive.directories
+                let service = expansive.services['minify-js']
+                let collections = expansive.control.collections
+                /*
+                    Build list of scripts to render. Must be in pak dependency order.
+                    Permit explicit script override list in pak package.json pak.render.js
+                 */
+                let files
+                if (service.files) {
+                    files = directories.top.files(service.files, { directories: false, relative: true})
+                } else {
+                    let list = directories.top.files(expansive.control.documents, {directories: false, relative: true })
+                    list = list.filter(function(path) path.glob(['**.js', '**.min.map']))
+                    files = []
+                    /* Sort files by pak dependency order */
+                    for each (pak in expansive.pakList) {
+                        let path = directories.lib.join(pak)
+                        let json = directories.paks.join(pak, 'package.json').readJSON()
+                        let explicitRender = (json && json.pak && json.pak.render) ? json.pak.render.js : null
+                        for each (file in list) {
+                            if (file.startsWith(path)) {
+                                if (!explicitRender) {
+                                    files.push(file)
+                                }
+                            }
+                        }
+                        if (explicitRender) {
+                            /* Expand first to permit ${TOP} which is absolute to override directories.lib */
+                            for (let [key,value] in explicitRender) {
+                                explicitRender[key] = value.expand(expansive.dirTokens, { fill: '.' })
+                            }
+                            let render = directories.lib.join(pak).files(explicitRender, {relative: true})
+                            for each (path in render) {
+                                files.push(directories.lib.join(pak, path).relative)
+                            }
+                        }
                     }
                 }
-                if (file) {
-                    service.hash[file.name] = true
+                files = files.unique()
+
+                let scripts = []
+                service.hash = {}
+                for each (file in files) {
+                    let ext = file.extension
+                    let script = null
+                    if (ext == 'map') {
+                        if (service.usemap) {
+                            service.hash[file.name] = true
+                        } else {
+                            service.hash[file.name] = 'not required because "usemap" is false.'
+                        }
+                    } else if (file.endsWith('min.js')) {
+                        if (service.usemin ||
+                                (service.usemap && file.replaceExt('map').exists && service.usemin !== false)) {
+                            service.hash[file.name] = true
+                            script = file
+                        } else {
+                            service.hash[file.name] = 'not required because "usemin" is false.'
+                        }
+                    } else if (ext == 'js') {
+                        let minified = file.replaceExt('min.js')
+                        if (service.usemin && minified.exists) {
+                            service.hash[file.name] = 'not required because ' + file.replaceExt('min.js') + ' exists.'
+                        } else {
+                            let mapped = file.replaceExt('min.map')
+                            if (service.usemap && mapped.exists && minified.exists) {
+                                service.hash[file.name] = 'not required because ' + file.replaceExt('min.js') + ' exists.'
+                            } else if (service.minify) {
+                                service.hash[file.name] = { minify: true }
+                                script = file
+                            } else {
+                                service.hash[file.name] = true
+                                script = file
+                            }
+                        }
+                    }
+                    if (script) {
+                        scripts.push(script.trimStart(directories.lib + '/').trimStart(directories.contents + '/'))
+                    }
                 }
-            }
-            let minify = Cmd.locate('uglifyjs')
-            if (!minify) {
-                trace('Warn', 'Cannot find uglifyjs')
-                service.enable = false
-            }
-            let cmd = minify
-            if (service.compress) {
-                cmd += ' --compress'
-            }
-            if (service.mangle) {
-                cmd += ' --mangle'
-            }
-            service.cmd = cmd
+                collections.scripts = scripts + (collections.scripts || [])
 
+                let minify = Cmd.locate('uglifyjs')
+                if (!minify) {
+                    trace('Warn', 'Cannot find uglifyjs')
+                    service.enable = false
+                }
+                let cmd = minify
+                if (service.compress) {
+                    cmd += ' --compress'
+                }
+                if (service.mangle) {
+                    cmd += ' --mangle'
+                }
+                service.cmd = cmd
+            }
+            init()
 
+            /*
+                Transformation callback called when rendering
+             */
             function transform(contents, meta, service) {
-                if (!service.hash[meta.source]) {
-                    vtrace('Omit', 'Skip minifying', meta.source)
+                let instructions = service.hash[meta.source]
+                if (!instructions) {
                     return contents
                 }
-                let ext = meta.file.extension
-                if (ext == 'map') {
-                    if (service.usemap) {
-                        return contents
-                    }
-                    vtrace('Skip', meta.file + '. Not required because "usemap" is false.')
+                if (instructions is String) {
+                    vtrace('Info', meta.file + ' ' + instructions)
                     return null
                 }
-                if (meta.file.endsWith('min.js')) {
-                    if (service.usemin || (service.usemap && meta.source.replaceExt('map').exists)) {
-                        return contents
+                if (instructions.minify) {
+                    vtrace('Info', 'Minify', meta.file)
+                    let cmd = service.cmd
+                    if (service.genmap) {
+                        let mapFile = meta.document.replaceExt('min.map')
+                        mapFile.dirname.makeDir()
+                        cmd += ' --source-map ' + mapFile
+                        contents = runFile(cmd, contents, meta)
+                        let map = mapFile.readJSON()
+                        map.sources = [ meta.document ]
+                        mapFile.write(serialize(map))
+                    } else {
+                        contents = run(cmd, contents)
                     }
-                    vtrace('Skip', meta.file + '. Not required because "usemin" is false.')
-                    return null
-                }
-                if (ext == 'js') {
-                    let minified = meta.source.replaceExt('min.js')
-                    if ((service.usemin || service.usemap) && minified.exists) {
-                        vtrace('Skip', meta.file + '. Not required because ' + meta.file.replaceExt('min.js') + ' exists.')
-                        return null
-                    }
-                    if (service.minify) {
-                        let cmd = service.cmd
-                        if (service.genmap) {
-                            let mapFile = meta.document.replaceExt('min.map')
-                            mapFile.dirname.makeDir()
-                            cmd += ' --source-map ' + mapFile
-                            contents = runFile(cmd, contents, meta)
-                            let map = mapFile.readJSON()
-                            map.sources = [ meta.document ]
-                            mapFile.write(serialize(map))
-                        } else {
-                            contents = run(cmd, contents)
-                        }
-                        if (service.dotmin && !meta.document.contains('min.js')) {
-                            meta.document = meta.document.trimExt().joinExt('min.js', true)
-                        }
-                        return contents
+                    if (service.dotmin && !meta.document.contains('min.js')) {
+                        meta.document = meta.document.trimExt().joinExt('min.js', true)
                     }
                 }
                 return contents
-           }
+            }
+
+            public function renderScripts(filter) {
+                let scripts = (expansive.collections.scripts || [])
+                for each (script in scripts.unique()) {
+                    if (filter && !Path(script).glob(filter)) {
+                        continue
+                    }
+                    write('<script src="' + meta.top + script + '"></script>\n    ')
+                }
+                if (expansive.collections['inline-scripts']) {
+                    write('<script>')
+                    for each (script in expansive.collections['inline-scripts']) {
+                        write(script)
+                    }
+                    write('\n    </script>')
+                }
+            }
         `
     }
 })
