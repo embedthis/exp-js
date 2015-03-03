@@ -1,59 +1,89 @@
 exp-js
 ===
 
-Expansive plugin to manage rendering Javascript files.
+Expansive plugin to manage Javascript files.
 
-Provides the 'minify-js' service.
+## Overview
 
-### To install:
+The exp-js plugin provides build tooling for script files. It provides the **render-js** service to
+manage the generation HTML for script files and provides the **minify-js** service to minify script files for release distributions.
+
+## Installation
 
     pak install exp-js
 
-### Description
+### Services
 
-The minify-js service intelligently selects processes Javascript files. By default, it runs in a "debug"
-mode where supplied minified scripts are used if a corresponding source map file with a 'min.map' extension is present.
-Otherwise, raw Javascript files with a plain 'js' extension will be used.
+Provides the following services:
+* minify-js
+* render-js
 
-Script files can be optimized by minfication post-processing to remove white-space, managle names and otherwise compress.
-By default, the script files use a '.js' extension, but will use a '.min.js' extension if the 'dotmin' option is
-enabled.
+## render-js
 
-The renderScripts() API may be used in documents to render HTML script elements for all required scripts. The scripts
-to be be rendered will be added to the Expansive 'scripts' collection in a bottom up, Pak dependency order. The list of
-script can be overriden by modifying the 'scripts' collection using the addItems, removeItems APIs.
+The render-js service smartly selects supplied Javascript files. By default, it selects minified scripts if a corresponding source map file with a 'min.map' extension is present. Otherwise, non-minified Javascript files with a plain 'js' extension will be selected.
 
-The renderScripts API may be invoked with an optional array of Path patterns to select a subset of scripts for which 
-to create script elements.
+The render-js service also provides the `renderScript` API which generates &lt;script&gt; elements for selected script files. The order of generated script elements will match the required order as specified by Pak dependencies.
 
-### To configure in expansive.json:
+The renderScripts API may be invoked with an optional array of Path patterns to select a subset of scripts for which
+to create script elements. This can be used to select or reject specific script files. A second argument may provide
+extra script files to render.
+```
+    renderScripts(['!unwanted.js'], ['extra.js'])
+```
 
-* minify-js.compress &mdash; Enable compression of script files. Default to true.
-* minify-js.dotmin &mdash; Use '.min.js' as the output file extension after minification. Otherwise will be 
-    '.js'.  Default to true.
-* minify-js.enable &mdash; Enable minifying script files. Default to true.
-* minify-js.files &mdash; Array of files to minify. Files are relative to 'source'.
-* minify-js.genmap &mdash; Generate source map for minified scripts if 'minified' is true. Default to true.
-* minify-js.mangle &mdash; Enable mangling of Javascript variable and function names. Default to true.
-* minify-js.minify &mdash; Enable minifying of Javascript files. Default to false.
-* minify-js.usemap &mdash; Use minified Javascript if corresponding source maps is present. Default to true.
-* minify-js.usemin &mdash; Use minified Javascripts if present. Default to null. Set explicitly to false
+### Configuration
+
+* enable &mdash; Enable the service. Default to true.
+* files &mdash; Array of files to process. Default so [ '**.js', '**.min.map', '**.min.js.map'] in
+    the control.documents directories.
+* mappings &mdash; Set of extensions to transform. Defaults to:
+```
+mappings: {
+    'js',
+    'min.js',
+    'min.map',
+    'min.js.map'
+}
+```
+* usemap &mdash; Use minified Javascript if corresponding source maps is present. Default to true.
+* usemin &mdash; Use minified Javascript if present. Default to null. Set explicitly to false
     to disable the use of minified resources.
 
+## minify-js
+
+The minify-js service optimizes script files by minifying to remove white-space, managle names and otherwise compress the scripts. By default, the script files use a '.js' extension, but will use a '.min.js' extension if the 'dotmin' option is enabled.
+
+### Configuration
+
+* compress &mdash; Enable compression of script files. Default to true.
+* dotmin &mdash; Use '.min.js' as the output file extension after minification. Otherwise will be '.js'.  Default to true.
+* enable &mdash; Enable minifying script files. Default to true.
+* files &mdash; Array of files to minify. Files are relative to 'source'.
+* genmap &mdash; Generate source map for minified scripts if 'minified' is true. Default to true.
+* mangle &mdash; Enable mangling of Javascript variable and function names. Default to true.
+* minify &mdash; Enable minifying of Javascript files. Default to false.
+
+## Example
+
+The `debug` collection will be selected if the package.json `pak.mode` is set to debug. Similarly for the `release` collection.
+
 ```
-{
+debug: {
     services: {
-        'minify-js': {
-            enable: true,
-            files:      null,
-            compress:   true,
-            mangle:     true,
-            dotmin:     false,
+        "minify-js": {
+            usemap: true
+        }
+    }
+}
+release: {
+    services: {
+        "minify-js": {
+            minify: true
         }
     }
 }
 ```
 
-### Get Pak from
+## Get Pak
 
 [https://embedthis.com/pak/](https://embedthis.com/pak/download.html)
