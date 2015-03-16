@@ -17,7 +17,6 @@
         }
     },
     "pak": {
-        "install": false,
         "version": ">=0.10"
     }
 }
