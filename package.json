@@ -1,7 +1,7 @@
 {
     "name": "exp-js",
     "description": "Js Plugin for Expansive",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "keywords": [
         "expansive-plugin",
         "js"
@@ -13,7 +13,7 @@
     },
     "scripts": {
         "postcache": {
-            "script": "Cmd.locate('uglifyjs') || run('npm install -g uglify-js')"
+            "script": "if (!Cmd.locate('uglifyjs')) { if (!Cmd.locate('npm')) { throw 'Cannot locate the \"npm\" utility.' } else { run('npm install -g uglify-js')}}"
         }
     },
     "pak": {
