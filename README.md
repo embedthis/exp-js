@@ -15,6 +15,7 @@ manage the generation HTML for script files and provides the **minify-js** servi
 ### Services
 
 Provides the following services:
+
 * minify-js
 * render-js
 
