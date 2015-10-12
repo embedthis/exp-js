@@ -14,7 +14,7 @@ Expansive.load({
         },
         compress:   true,
         dotmin:     true,
-        extract:    true,
+        extract:    false,
         files:      [ 'lib/**.js*', '!lib**.map' ],
         force:      false,
         mangle:     true,
@@ -221,7 +221,12 @@ Expansive.load({
                 if (extras && extras is String) {
                     extras = [extras]
                 }
-                extras += expansive.services['extract-js'].inlineScripts
+                if (expansive.services['extract-js'].states) {
+                    let extracted = expansive.services['extract-js'].states[meta.destPath]
+                    if (extracted && extracted.href) {
+                        extras.push(expansive.services.js.resolve(extracted.href, expansive.services.js))
+                    }
+                }
                 for each (script in extras) {
                     let uri = meta.top.join(script).trimStart('./')
                     write('<script src="' + uri + '"></script>\n    ')
@@ -236,6 +241,7 @@ Expansive.load({
         script: `
             let service = expansive.services['extract-js']
             service.nextId = 0
+            service.states = {}
 
             /*
                 Local function to extract inline script elements
@@ -306,14 +312,12 @@ Expansive.load({
                 contents = handleScriptElements(contents, meta, state)
                 contents = handleScriptAttributes(contents, meta, state)
                 if (state.scripts || state.onclick) {
-                    service.inlineScripts||= []
-                    if (expansive.services.js.extract === true) {
-                        service.inlineScripts.push(meta.destPath.replaceExt('js'))
-                    } else {
-                        service.inlineScripts.push(expansive.services.js.extract)
-                    }
-                    service.states ||= {}
                     let ss = service.states[meta.destPath] ||= {}
+                    if (expansive.services.js.extract === true) {
+                        ss.href = meta.destPath.replaceExt('js')
+                    } else {
+                        ss.href = expansive.services.js.extract
+                    }
                     if (state.scripts) {
                         ss.scripts ||= []
                         ss.scripts += state.scripts
