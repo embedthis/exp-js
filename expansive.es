@@ -333,7 +333,6 @@ Expansive.load({
              */
             function post(topMeta, service) {
                 let perdoc = (expansive.services.js.extract === true)
-print("PERDOC", perdoc)
                 let scripts = '/*\n    Inline scripts for \n */\n'
 
                 for (let [file, state] in service.states) {
