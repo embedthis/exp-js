@@ -361,7 +361,6 @@ Expansive.load({
                     scripts = renderContents(scripts, meta)
                     writeDest(scripts, meta)
                 }
-                delete service.states
             }
         `
     } ]
