@@ -156,7 +156,7 @@ Expansive.load({
                             let map = base.joinExt('min.map', true).exists || base.joinExt('js.map', true).exists ||
                                 base.joinExt('.min.js.map', true).exists
                             if (vfile.endsWith('min.js')) {
-                                if (service.usemin && (!service.usemap || map)) {
+                                if ((service.minify || service.usemin) && (!service.usemap || map)) {
                                     scripts.push(script)
                                 }
                             } else {
