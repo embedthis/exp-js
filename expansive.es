@@ -191,6 +191,7 @@ Expansive.load({
                         if (filter && !Path(script).glob(filter)) {
                             continue
                         }
+                        script = Path(script).portable
                         let uri = meta.top.join(script).trimStart('./')
                         write('<script src="' + uri + '"></script>\n    ')
                     }
@@ -206,6 +207,7 @@ Expansive.load({
                     }
                     for each (script in extras) {
                         let uri = meta.top.join(script).trimStart('./')
+                        script = Path(script).portable
                         write('<script src="' + uri + '"></script>\n    ')
                     }
                 }
