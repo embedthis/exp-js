@@ -20,6 +20,7 @@
             "postcache": {
                 "script": "if (!Cmd.locate('uglifyjs')) { if (!Cmd.locate('npm')) { throw 'Cannot locate the \"npm\" utility.' } else { run('npm install -g uglify-js')}}"
             }
-        }
+        },
+        "origin": "embedthis/exp-js"
     }
 }
