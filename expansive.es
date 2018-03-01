@@ -33,7 +33,7 @@ Expansive.load({
                     if (!(service.files is Array)) {
                         service.files = [ service.files ]
                     }
-                    expansive.control.collections.scripts = 
+                    expansive.control.collections.scripts =
                         (expansive.control.collections.scripts + service.files).unique()
                 }
                 if (!service.extract) {
@@ -68,7 +68,7 @@ Expansive.load({
                     let minified = vfile.replaceExt('min.js')
                     /*
                         Minify if required, or a suitable minfied version does not exist or !usemin
-                     */                           
+                     */
                     if (service.minify || !(minified.exists && service.usemin && (!service.usemap ||
                             (vfile.replaceExt('min.map').exists || vfile.replaceExt('min.js.map').exists)))) {
                         if (service.minify && service.dotmin) {
@@ -177,12 +177,12 @@ Expansive.load({
 
                     /*
                         Pages have different scripts and so must compute script list per page.
-                        This is hased and saved.
+                        This is hashed and saved.
                      */
                     let directories = expansive.directories
                     let service = expansive.services.js
                     if (!service.hash[collections.scripts]) {
-                        let files = directories.contents.files(collections.scripts, 
+                        let files = directories.contents.files(collections.scripts,
                             { contents: true, directories: false, relative: true})
                         files = expansive.orderFiles(files, "js")
                         service.hash[collections.scripts] = buildScriptList(files).unique()
@@ -198,6 +198,9 @@ Expansive.load({
                     if (extras && extras is String) {
                         extras = [extras]
                     }
+                    if (collections.remoteScripts) {
+                        extras = extras + collections.remoteScripts
+                    }
                     if (service.states) {
                         let extracted = service.states[meta.destPath]
                         if (extracted && extracted.href) {
@@ -206,9 +209,14 @@ Expansive.load({
                         }
                     }
                     for each (script in extras) {
+                        let async = ''
+                        if (script.startsWith('async ')) {
+                            async = 'async '
+                            script = script.split('async ')[1]
+                        }
                         let uri = meta.top.join(script).trimStart('./')
                         script = Path(script).portable
-                        write('<script src="' + uri + '"></script>\n    ')
+                        write('<script ' + async + 'src="' + uri + '"></script>\n    ')
                     }
                 }
             },
@@ -256,7 +264,7 @@ Expansive.load({
                 }
 
                 /*
-                    Local function to extract onclick attributes 
+                    Local function to extract onclick attributes
                  */
                 function handleScriptAttributes(contents, meta, state): String {
                     let result = ''
