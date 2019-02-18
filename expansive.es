@@ -88,8 +88,8 @@ Expansive.load({
                 let service = transform.service
                 let cmd = Cmd.locate('uglifyjs')
                 if (!cmd) {
-                    trace('Warn', 'Cannot find uglifyjs')
-                    transform.enable = false
+                    throw new Error('Cannot find uglifyjs')
+                    // transform.enable = false
                 } else if (!service.minify) {
                     transform.enable = false
                 } else {
