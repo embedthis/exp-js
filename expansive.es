@@ -88,8 +88,12 @@ Expansive.load({
                 let service = transform.service
                 let cmd = Cmd.locate('uglifyjs')
                 if (!cmd) {
-                    throw new Error('Cannot find uglifyjs')
-                    // transform.enable = false
+                    trace('Install', 'Uglify')
+                    Cmd.run('npm install -g uglify-js')
+                    cmd = Cmd.locate('uglifyjs')
+                    if (!cmd) {
+                        throw new Error('Cannot find uglifyjs')
+                    }
                 } else if (!service.minify) {
                     transform.enable = false
                 } else {
