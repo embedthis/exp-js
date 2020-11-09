@@ -107,16 +107,20 @@ Expansive.load({
             render: function (contents, meta, transform) {
                 trace('Minify', meta.source)
                 let cmd = transform.cmd
-                if (transform.service.usemap) {
-                    let mapFile = meta.dest.replaceExt('map')
-                    mapFile.dirname.makeDir()
-                    cmd += ' --source-map ' + mapFile
-                    contents = runFile(cmd, contents, meta)
-                    let map = mapFile.readJSON()
-                    map.sources = [ meta.dest ]
-                    mapFile.write(serialize(map))
-                } else {
-                    contents = run(cmd, contents)
+                try {
+                    if (transform.service.usemap) {
+                        let mapFile = meta.dest.replaceExt('map')
+                        mapFile.dirname.makeDir()
+                        cmd += ' --source-map ' + mapFile
+                        contents = runFile(cmd, contents, meta)
+                        let map = mapFile.readJSON()
+                        map.sources = [ meta.dest ]
+                        mapFile.write(serialize(map))
+                    } else {
+                        contents = run(cmd, contents)
+                    }
+                } catch (err) {
+                    //  Continue
                 }
                 return contents
             },
